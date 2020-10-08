@@ -1,0 +1,214 @@
+//// ************************************************************************ \\\\
+Universitatea POLITEHNICA din Bucuresti - Facultatea de Automatica si Calculatoare
+
+**********************************************************************************
+Nume student: Bordincel Andra-Maria, grupa 315CC.
+An de studiu: 2019 - 2020.
+Tema proiect: Sparse-Jacobi-- K-Means-Householder -- Prediction -- 
+		Gradient-Descnet-Prediction
+
+**********************************************************************************
+
+Implementarea cerintelor:
+# Partea - 1:
+
+• function [A, b] = generate probabilities system(rows):
+	Pentru implementarea acestei functii am inceput prin intitializarea
+index-ului, ce reprezinta numarul de linii si de coloane al matricii de
+probabilitati, cu valoarea 0 si prin a salva valoarea "rows" intr-o variabila
+auxiliara. Pentru determinarea valorii "index" am folosit o bucla for prin care
+calculam suma a "aux" numere consecutive. 
+	Urmatorul pas a fost initializarea matricii de probabilitati cu valoarea
+0, urmand completarea diagonalei cu valori de 6, acestea urmand sa fie inlocuite
+in cazurile intalnite, cu valori de 5 sau de 4. In generarea matricii, am tinut
+cont de faptul ca aceasta este simetrica. Pentru a completa valorile de pe
+fiecare linie corespunzatoare elementelor am tinut cont de apartenenta acestuia
+la una dintre cele 3 laturi ale diagramei triunghiulare, latura din stanga,
+latura din dreapta, latura de jos, mijloc sau varf. Pentru apartenenta la latura,
+elementul A(i,i) ia valoarea 5, pentru mijloc, A(i,i) ramane 6, iar pentru
+varfuri A(i,i) ia valoarea 4. Corespunzator acestei clasificari se adauga si
+valorile de -1 pe fiecare linie, tinand cont de simetria matricii.
+	Generarea vectorului b am realizat-o initializand-ul cu 0 pentru primele
+"index-rows" elemente, si cu 1 pentru restul valorilor pana la index, anume cele
+ale caror indici se regasesc pentru ultima linie a diagramei, obtinand astfel un
+vector linie pe care l-am transpus pentru obtinerea vectorului coloana, cel al
+solutiilor.
+
+• function [values, colind, rowptr] = matrix to csr(A):
+	Aceasta functie am realizat-o incepand prin extragerea dimensiunilor
+matricii A pentru o parcurgere mai usoara a acesteia si initializarea valorii
+"nz" cu valoarea 1, urmand ca aceasta sa fie iterata. In cadrul parcurgerii
+matricii, pentru fiecare linie se initializeaza variabila "k" cu 0, aceasta
+avand rolul de contor, iar apoi se verifica daca elementul este nenul, crescand
+valoarea lui k si introducand elemenul in vectorul "values", si pozitia acestuia
+in vectorul "colind". In cazul in care k este egal cu 1, inseamna ca elementul
+este primul element nenul de pe linia respectiva, si se adauga indicele "nz"
+corespunzator acestuia in vectorul "rowptr", dupa care se continua cu iterarea
+valorii "nz". Ultima valoare din "rowptr" ia valoarea "nz" finale datorita
+initializarii acesteia cu 1.
+
+Pentru cele doua functii Jacobi, am folosit implementarea prezentata la
+laboratorul suplimentar de explicatii: 
+- https://ctipub-my.sharepoint.com/personal/radu_stochitoiu_stud_acs_upb_ro/_layouts/15/Doc.aspx?sourcedoc={0f7ba002-cd86-4559-82e1-cfe8937cc156}&action=view&wd=target%28Jacobi.one%7Cb6aa6281-035e-4452-9d73-de0b094e549d%2F2.%20Jacobi%20is%20strict%20inf.%20to%7C75e7b733-a76e-40fc-a090-5783cb8fc8ea%2F%29
+
+• function [G J, c J] = Jacobi factorization(A, b):
+	In aceasta functie am inceput prin extragerea matricii diagonale N si
+calcularea matricii P ce reprezinta suma (L + U), corespunzatoare lui A, apoi
+am determinat inversa matricii N necesara in calcularea matricii de iteratie
+G_J, obtinuta prin efectuarea produsului dintre inversa lui N si matricea P,
+si a vectorului de iteratie c_J, obtinut prin inmultirea inversei lui N si
+vectorul b.
+
+• function [x] = Jacobi sparse(G values, G colind, G rowptr, c, tol):
+	Aceasta functie consta in initializarea vectorului de solutii initiale
+cu 0, urmand ca apoi sa se recalculeze vectorul de solutii x pana cand valoarea
+acestuia este similara cu valoarea precedenta. Noile valori ale lui x de la
+fiecare pas se calculeaza utilizand forma CSR a matricii G_j, vectorul de
+solutii precedente si vectorul c_j. In urma acestei operatii se calculeaza
+eroarea dintre valoarile precedente si cele actuale, comparandu-se apoi cu o
+toleranta impusa pentru observarea modificarilor.
+
+# Partea - 2:
+
+• function [centroids] = clustering pc(points, NC):
+	Pentru implementarea acestei functii am inceput cu calcularea centroizilor
+initiali, operatie efectuata prin calcularea sumelor dimensiunilor fiecarui
+cluster si efectuand media aritmetica a clusterului odata cu adaugarea unui nou
+punct in acesta, obtinand astfel NC centtroizi initiali.
+	In continuare am utilizat o variabila semafor, ok, initializata cu
+valoarea 0, pentru inceperea unei bucle while in care recalculez valorile
+centroizilor. In interiorul acestei bucle calculez distanta euclidiana de la
+fiecare punct la toti cei NC centroizi, obtinand o matrice de tip NxNC, urmand
+ca apoi sa extrag indicii coloanelor pe care aceasta distanta este minima,
+realizand astfel corespondenta punct - centroid. In functie de acest indice
+extras, recalculez mai departe mediile aritmetice ale fiecarui cluster, in
+functie de cate puncte apartin acum unui anume centroid.
+	In cazul in care valorile centroizilor nu se mai modifica, variabila
+"ok" devine 1 si se intrerupe ciclarea, rezultand astfel matricea de centroizi,
+iar daca acestea sunt diferite in continuare se reia procesul descris mai sus,
+pana cand valoarea actuala va fi egala cu cea precedenta.
+
+• function [cost] = compute cost pc(points, centroids):
+	In implementarea acestei functii am rescris secventa de calculare a
+distantelor de la fiecare punct la cei NC centroizi, doar ca de data aceasta
+folosesc valorile finale ale centroizilor. Extrag de data aceasta valorile
+minime de pe fiecare linie, iar costul minim reprezinta suma acestora.
+
+# Partea - 3:
+
+• function [sol] = rgbHistogram(path to image, count bins):
+	Am inceput implementarea acestei functii prin determinarea matricilor
+R, G si B din imaginea citita prin functia "imread". Mai departe am construit
+un vector cu capete de intervale, utilizand dimensiunea maxima de 256 ca si
+capat al intervalului mare, de dimensiune "count_bins + 1" pentru a putea obtine
+"count_bins" subintervale. Am folosit functia "histc", salvand intr-o matrice
+N_*( * = R/ G/ B) cu count_bins linii cate valori se alfa in fiecare subinterval
+pe fiecare dintre liniile matricii R/ G/ B, apoi am salvat numarul total de
+elemente din fiecare subinterval intr-un vecor count_*( * = R/ G/ B). Solutia
+finala "sol", de dimensiune count_bins * 3 am realizat-o prin alipirea celor 3
+vectori auxiliari count_*( * = R/ G/ B).
+
+• function [sol] = hsvHistogram(path to image, count bins):
+	Similara functiei "rgbHistogram", functia hsvHistogram este compusa din
+acelasi procedeu descris mai sus, cu exceptia faptului ca acum intervalul are
+ca si capat superior valoarea 1.01 si ca matricile H, S si V le-am obtinut
+realizand conversia "rgbTOhsv" a imaginii transmise ca si parametru. Pentru
+realizarea functiei "rgbTOhsv" am vectorizat algoritmul descris in enuntul temei.
+
+Pentru functiile Householder si SST, am folosit implementarea prezentata la
+cursul numarul 3, modificata pentru necesitatea mea, respectiv functia creata
+la laboratorul numarul 2, problema 3:
+- Householder: https://acs.curs.pub.ro/2019/pluginfile.php/63278/mod_resource/content/3/householder.m
+- SST: https://acs.curs.pub.ro/2019/pluginfile.php/61576/mod_resource/content/1/lab_mn_02.pdf
+
+• function [Q, R] = Householder(A):
+	Aceasta functie presupune aducerea matricii A la forma sa tridiagonala,
+calculand reflectoarele Householder, apoi continuand prin transformarea
+coloanelor matricii A, pana cand se obtin matricea ortogonala Q, si
+matricea superior triungiulara R.
+
+• function [x] = SST(A, b):
+	Aceasta functie returneaza vectorul solutie al sistemului superior
+triunghiular transmis ca si parametru prin matricea A si vectorul rezultatelor
+b, fiind aplicata formula de calcul din pdf-ul aferent laboratorului numarul 2,
+atasat mai sus.
+
+• function [X, y] = preprocess(path to dataset, histogram, count bins):
+	In implementarea acestei functii am tinut cont de faptul ca 
+"path_to_dataset" nu reprezinta calea directa care imagini, asa ca am realizat
+mai multe operatii de obtinere a acestei cai, valabile atat in cazul directorului
+cu pisici, cat si in cazul celui cu nu_pisici. Pentru inceput am realizat calea
+catre pisici, respectiv catre nu_pisici, concatenand sirul "path_to_dataset" cu
+"cats/", respectiv "not_cats", apeland apoi pentru fiecare dintre acestea doua
+functia "getImgNames" pentru a obtine matricile corespunzatoare numelor
+fotografiilor din cele doua directoare. Urmatoarea operatie de concatenare a
+sirurilor am efectuat-o pentru a obtine caile catre poze si salvandu-le in doua
+matrici auxiliare, "c" si "d".
+	In functie de tipul de histograma transmis ca si parametru se transmit
+matricile "c" si "d" ca si parametrii catre functiile "rgbHistogram" sau
+"hsvHistogram", descirse mai sus, iar rezultatele pentru pisicis se salveaza in
+matricea A, iar cele pentru nu_pisici in matricea B.
+	Solutia X este compusa din alipirea celor doua matrici, A si B, iar
+vectorul y ia valoarea 1 pe numarul de elemente egal cu numarul de poze cu
+pisici obtinut din dimensiunea matricei rezultate din "getImgNames" in cazul
+pisicilor, si in continuarea acestor valori, se completeaza cu -1 pe numarul de
+elemente egal cu numarul de poze nu_pisici rezultat din dimensiunea matricei
+obtinute prin apelarea functiei "getImgNames" in cazul nu_pisicilor.
+
+• function [w] = learn(X, y):
+	Primul pas in implementarea acestei functii este crearea matricii X
+tilda, notata in cazul meu cu X1, pentru care este aplicata mai departe
+descompunerea QR prin apelarea functiei Householder. Vectorul b reprezinta
+produsul dintre matricea ortogonala Q' si vectorul de etichete y, acesta fiind
+transmis mai departe ca si vector de solutii in functia SST, ce primeste ca si
+prim parametru matricea tridiagonala R. Astfel, solutia w reprezinta solutia
+sistemului superior triungiular format de matricea R, obtinuta din apelarea
+functiei Householder, si vectorul de solutii b.
+
+• function [percentage] = evaluate(path to testset, w, histogram, count bins):
+	In urma invatarii vectorului w pentru un anumit set de fotografii, se
+recalculeaza matricea X a caracteristicilor si vectorul y pentru un nou set de
+date, apeland din nou functia "preprocess" descrisa mai sus. Urmatorul pas este
+extragerea semenlor vectorului y, adaugarea coloanei de valori de 1 in matricea
+X, urmand de calcularea vectorului auxiliar ce reprezinta solutia X * w, caruia
+ii sunt extrase la randul sau semnele in vectorul "semne_k". Pentru a verifica
+cate dintre poze sunt recunoscute folosesc un contor "count" initializat cu
+valoarea 0, pe care il cresc in cazul in care semnele de pe o anumita pozitie
+in cei 2 vectori, "semne_y" si "semne_k" sunt identice. In final, acuratetea de
+predictie este data de contorul de poze recunoscute, impartit la numarul de
+poze total.
+
+# Partea - 4:
+
+• function [w] = learn(X, y, lr, epochs)
+	Aceasta functie reprezinta "traducerea" personala a algoritmului descris
+in enuntul temei. Pentru a nu exista riscul includerii coloanei de valori de 1,
+am ales sa scalez coloanele utilizand matricea de caracteristici X initiala.
+Pentru scalare am vectorizat media de pe fiecare coloana, salvata in variabila
+auxiliara "media", deviatia fiecarei coloane, salvata in variabila "deviatia",
+iar apoi formula am rescris-o sub forma "X = (X - media) ./ deviatia", realizand
+astfel un calcul mult mai rapid. In urma acestei scalari, am adaugat coloana de
+valori de 1 si am construit matricea X tilda, notata cu X1. Pentru obtinerea
+valorilor lui "w", am folosit functia "rand" aplicata pe intervalul [-1, 1],
+impartind toate elementele obtinute la 10 pentru revenirea la intervalul initial,
+[-0.1, 0.1]. Mai departe, am rescris vectorizat secventa de cod detaliata in
+enunt, obtinand noul vector solutie w.
+
+• function [percentage] = evaluate(path to testset, w, histogram, count bins)
+	Functia este similara celei implementate la partea a 3-a, singura
+diferenta fiind faptul ca matricea X obtiuta prin functia "preprocess" este si
+ea scalata in mod identic celui folosit in implementarea functiei "learn". Dupa
+aceasta operatie de modificare a coloanelor, se pastreaza operatiile efectuate
+la partea a 3-a.
+
+~_BIBLIOGRAFIE_~:
+
+- imread: https://octave.org/doc/v4.2.1/Loading-and-Saving-Images.html
+- histc:  https://octave.sourceforge.io/octave/function/histc.html
+- rand:   https://octave.sourceforge.io/octave/function/rand.html
+- randi:  https://octave.sourceforge.io/octave/function/randi.html
+- mean:   https://octave.sourceforge.io/nan/function/mean.html
+- std:    https://octave.sourceforge.io/octave/function/std.html
+- SST:    https://acs.curs.pub.ro/2019/pluginfile.php/61576/mod_resource/content/1/lab_mn_02.pdf
+- Householder: https://acs.curs.pub.ro/2019/pluginfile.php/63278/mod_resource/content/3/householder.m
+- Jacobi: https://ctipub-my.sharepoint.com/personal/radu_stochitoiu_stud_acs_upb_ro/_layouts/15/Doc.aspx?sourcedoc={0f7ba002-cd86-4559-82e1-cfe8937cc156}&action=view&wd=target%28Jacobi.one%7Cb6aa6281-035e-4452-9d73-de0b094e549d%2F2.%20Jacobi%20is%20strict%20inf.%20to%7C75e7b733-a76e-40fc-a090-5783cb8fc8ea%2F%29
